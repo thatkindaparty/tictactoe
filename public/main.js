@@ -5145,8 +5145,12 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$element = _Browser_element;
 var $author$project$Main$Model = F2(
-	function (state, turn) {
-		return {state: state, turn: turn};
+	function (state, errMsg) {
+		return {errMsg: errMsg, state: state};
+	});
+var $author$project$Main$State = F2(
+	function (plays, turn) {
+		return {plays: plays, turn: turn};
 	});
 var $elm$core$List$repeatHelp = F3(
 	function (result, n, value) {
@@ -5169,46 +5173,126 @@ var $elm$core$List$repeat = F2(
 	function (n, value) {
 		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
 	});
-var $author$project$Main$initState = A2($elm$core$List$repeat, 9, 0);
-var $author$project$Main$initModel = A2($author$project$Main$Model, $author$project$Main$initState, 1);
+var $author$project$Main$initState = A2(
+	$author$project$Main$State,
+	A2($elm$core$List$repeat, 9, 0),
+	1);
+var $author$project$Main$initModel = A2($author$project$Main$Model, $author$project$Main$initState, '');
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
 	return _Utils_Tuple2($author$project$Main$initModel, $elm$core$Platform$Cmd$none);
 };
-var $elm$core$Platform$Sub$batch = _Platform_batch;
-var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
+var $author$project$Main$PullState = function (a) {
+	return {$: 'PullState', a: a};
+};
+var $elm$json$Json$Decode$value = _Json_decodeValue;
+var $author$project$Main$pullState = _Platform_incomingPort('pullState', $elm$json$Json$Decode$value);
 var $author$project$Main$subscriptions = function (model) {
-	return $elm$core$Platform$Sub$none;
+	return $author$project$Main$pullState($author$project$Main$PullState);
+};
+var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $author$project$Main$pushState = _Platform_outgoingPort('pushState', $elm$core$Basics$identity);
+var $elm$json$Json$Decode$field = _Json_decodeField;
+var $elm$json$Json$Decode$int = _Json_decodeInt;
+var $elm$json$Json$Decode$list = _Json_decodeList;
+var $author$project$Main$stateFromJson = A3(
+	$elm$json$Json$Decode$map2,
+	$author$project$Main$State,
+	A2(
+		$elm$json$Json$Decode$field,
+		'plays',
+		$elm$json$Json$Decode$list($elm$json$Json$Decode$int)),
+	A2($elm$json$Json$Decode$field, 'turn', $elm$json$Json$Decode$int));
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
+};
+var $author$project$Main$stateToJson = function (state) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'plays',
+				A2($elm$json$Json$Encode$list, $elm$json$Json$Encode$int, state.plays)),
+				_Utils_Tuple2(
+				'turn',
+				$elm$json$Json$Encode$int(state.turn))
+			]));
 };
 var $author$project$Main$replaceByIndex = F4(
 	function (target, newVal, i, oldVal) {
 		return _Utils_eq(target, i) ? newVal : oldVal;
 	});
-var $author$project$Main$updateState = F3(
-	function (i, turn, state) {
-		return A2(
-			$elm$core$List$indexedMap,
-			A2($author$project$Main$replaceByIndex, i, turn),
-			state);
-	});
 var $author$project$Main$updateTurn = function (turn) {
 	return (turn === 1) ? 2 : 1;
 };
+var $author$project$Main$updateState = F2(
+	function (i, state) {
+		return _Utils_update(
+			state,
+			{
+				plays: A2(
+					$elm$core$List$indexedMap,
+					A2($author$project$Main$replaceByIndex, i, state.turn),
+					state.plays),
+				turn: $author$project$Main$updateTurn(state.turn)
+			});
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
-		if (msg.$ === 'MakeMove') {
-			var i = msg.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						state: A3($author$project$Main$updateState, i, model.turn, model.state),
-						turn: $author$project$Main$updateTurn(model.turn)
-					}),
-				$elm$core$Platform$Cmd$none);
-		} else {
-			return _Utils_Tuple2($author$project$Main$initModel, $elm$core$Platform$Cmd$none);
+		switch (msg.$) {
+			case 'MakeMove':
+				var i = msg.a;
+				var newState = A2($author$project$Main$updateState, i, model.state);
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{state: newState}),
+					$author$project$Main$pushState(
+						$author$project$Main$stateToJson(newState)));
+			case 'ResetGame':
+				return _Utils_Tuple2(
+					$author$project$Main$initModel,
+					$author$project$Main$pushState(
+						$author$project$Main$stateToJson($author$project$Main$initState)));
+			default:
+				var value = msg.a;
+				var _v1 = A2($elm$json$Json$Decode$decodeValue, $author$project$Main$stateFromJson, value);
+				if (_v1.$ === 'Ok') {
+					var state = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{state: state}),
+						$elm$core$Platform$Cmd$none);
+				} else {
+					var e = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{errMsg: 'Error in updating the game'}),
+						$elm$core$Platform$Cmd$none);
+				}
 		}
 	});
 var $author$project$Main$ResetGame = {$: 'ResetGame'};
@@ -6322,11 +6406,11 @@ var $author$project$Main$viewCell = F2(
 					$elm$html$Html$text('0')
 				])));
 	});
-var $author$project$Main$viewBoard = function (state) {
+var $author$project$Main$viewBoard = function (plays) {
 	return A2(
 		$rundis$elm_bootstrap$Bootstrap$Grid$row,
 		_List_Nil,
-		A2($elm$core$List$indexedMap, $author$project$Main$viewCell, state));
+		A2($elm$core$List$indexedMap, $author$project$Main$viewCell, plays));
 };
 var $author$project$Main$view = function (model) {
 	return A2(
@@ -6347,7 +6431,7 @@ var $author$project$Main$view = function (model) {
 								$elm$html$Html$text('hello')
 							]))
 					])),
-				$author$project$Main$viewBoard(model.state),
+				$author$project$Main$viewBoard(model.state.plays),
 				A2(
 				$rundis$elm_bootstrap$Bootstrap$Button$button,
 				_List_fromArray(

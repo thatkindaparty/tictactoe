@@ -11,5 +11,12 @@ var app = Elm.Main.init({
 	node: document.getElementById('elm')
 });
 
-// TODO subscribe to collection('games').document(gameId)
-// TODO update collection('games').document(gameId)
+db.collection('games').doc(gameId)
+	.onSnapshot(snap => {
+		app.ports.pullState.send(snap.data);
+	});
+
+app.ports.pushState.subscribe(data => {
+	db.collection('games').doc(gameId).set(data);
+	// TODO success & fail callback
+});

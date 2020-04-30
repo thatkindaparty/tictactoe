@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Html exposing (Html, text, div)
@@ -11,6 +11,11 @@ import Bootstrap.Grid.Row as Row
 
 import Bootstrap.Button as Button
 
+import Json.Encode as E
+import Json.Decode as D
+
+port pullState : (D.Value -> msg) -> Sub msg
+port pushState : E.Value -> Cmd msg
 
 -- MAIN
 
@@ -23,11 +28,29 @@ main =
         , subscriptions = subscriptions
         }
 
+stateFromJson : D.Decoder State
+stateFromJson =
+    D.map2 State
+        (D.field "plays" (D.list D.int))
+        (D.field "turn" D.int)
+
+stateToJson : State -> E.Value
+stateToJson state =
+    E.object
+        [ ("plays", E.list E.int state.plays)
+        , ("turn", E.int state.turn)
+        ]
+
 
 -- MODEL
 
 type alias Model =
-    { state : List Int
+    { state : State
+    , errMsg : String
+    }
+
+type alias State =
+    { plays : List Int
     , turn : Int
     }
 
@@ -37,11 +60,11 @@ init _ =
 
 initModel : Model
 initModel =
-    Model initState 1
+    Model initState ""
 
-initState : List Int
+initState : State
 initState =
-    List.repeat 9 0
+    State (List.repeat 9 0) 1
 
 
 
@@ -50,25 +73,43 @@ initState =
 type Msg
     = MakeMove Int
     | ResetGame
+    | PullState D.Value
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
         MakeMove i ->
-            (
-                { model
-                    | state = updateState i model.turn model.state
-                    , turn = updateTurn model.turn
-                }
-            , Cmd.none
-            )
+            let
+                newState = updateState i model.state
+            in
+                ( { model | state = newState }
+                , pushState (stateToJson newState)
+                )
 
         ResetGame ->
-            ( initModel, Cmd.none )
+            ( initModel
+            , pushState (stateToJson initState)
+            )
 
-updateState : Int -> Int -> List Int -> List Int
-updateState i turn state =
-    List.indexedMap (replaceByIndex i turn) state
+        PullState value ->
+            case D.decodeValue stateFromJson value of
+                Ok state ->
+                    ( { model | state = state }
+                    , Cmd.none
+                    )
+
+                Err e ->
+                    ( { model | errMsg = "Error in updating the game" }
+                    , Cmd.none
+                    )
+
+
+updateState : Int -> State -> State
+updateState i state =
+    { state
+        | plays = List.indexedMap (replaceByIndex i state.turn) state.plays
+        , turn = updateTurn state.turn
+    }
 
 updateTurn : Int -> Int
 updateTurn turn =
@@ -87,16 +128,16 @@ view model =
         [ Grid.row []
             [ Grid.col [] [ text "hello" ]
             ]
-        , viewBoard model.state
+        , viewBoard model.state.plays
         , Button.button
             [ Button.attrs [ onClick ResetGame ] ]
             [ text "Reset game" ]
         ]
 
 viewBoard : List Int -> Html Msg
-viewBoard state =
+viewBoard plays =
     Grid.row []
-        (List.indexedMap viewCell state)
+        (List.indexedMap viewCell plays)
 
 viewCell : Int -> Int -> Grid.Column Msg
 viewCell i val =
@@ -116,4 +157,4 @@ viewCell i val =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    pullState PullState
