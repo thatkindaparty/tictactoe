@@ -10,6 +10,7 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 
 import Bootstrap.Button as Button
+import Bootstrap.Utilities.Spacing as Spacing
 
 import Json.Encode as E
 import Json.Decode as D
@@ -126,9 +127,9 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         [ Grid.row []
-            [ Grid.col []
-                [ span [] [ text ("Turn " ++ (String.fromInt model.state.turn)) ]
-                ]
+            [ Grid.col
+                [ Col.attrs [ Spacing.mt2, Spacing.mb2 ] ]
+                [ viewTurn model.state.turn ]
             ]
         , viewBoard model.state.plays
         , Button.button
@@ -136,23 +137,44 @@ view model =
             [ text "Reset game" ]
         ]
 
+viewTurn : Int -> Html Msg
+viewTurn turn =
+    if turn == 1 then
+        span [ style "color" "red" ] [ text "red's turn" ]
+    else
+        span [ style "color" "blue" ] [ text "blue's turn" ]
+
 viewBoard : List Int -> Html Msg
 viewBoard plays =
-    Grid.row []
+    div [ style "width" "225px" ]
         (List.indexedMap viewCell plays)
 
-viewCell : Int -> Int -> Grid.Column Msg
+viewCell : Int -> Int -> Html Msg
 viewCell i val =
     if val == 1 then
-        Grid.col [ Col.xs4 ] [ text "1" ]
+        div [ style "display" "inline-block"
+            , style "border" "1px solid black"
+            , style "margin-right" "5px"
+            , style "width" "70px"
+            , style "height" "70px"
+            , style "background-color" "red"
+            ] []
     else if val == 2 then
-        Grid.col [ Col.xs4 ] [ text "2" ]
+        div [ style "display" "inline-block"
+            , style "border" "1px solid black"
+            , style "margin-right" "5px"
+            , style "width" "70px"
+            , style "height" "70px"
+            , style "background-color" "blue"
+            ] []
     else
-        Grid.col
-            [ Col.xs4
-            , Col.attrs [ onClick (MakeMove i) ]
-            ]
-            [ text "0" ]
+        div [ style "display" "inline-block"
+            , style "border" "1px solid black"
+            , style "margin-right" "5px"
+            , style "width" "70px"
+            , style "height" "70px"
+            , onClick (MakeMove i)
+            ] []
 
 
 -- SUBSCRIPTIONS

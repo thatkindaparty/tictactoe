@@ -5302,6 +5302,12 @@ var $rundis$elm_bootstrap$Bootstrap$Internal$Button$Attrs = function (a) {
 var $rundis$elm_bootstrap$Bootstrap$Button$attrs = function (attrs_) {
 	return $rundis$elm_bootstrap$Bootstrap$Internal$Button$Attrs(attrs_);
 };
+var $rundis$elm_bootstrap$Bootstrap$Grid$Internal$ColAttrs = function (a) {
+	return {$: 'ColAttrs', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Grid$Col$attrs = function (attrs_) {
+	return $rundis$elm_bootstrap$Bootstrap$Grid$Internal$ColAttrs(attrs_);
+};
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
@@ -5507,6 +5513,8 @@ var $rundis$elm_bootstrap$Bootstrap$Grid$container = F2(
 				attributes),
 			children);
 	});
+var $rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mb2 = $elm$html$Html$Attributes$class('mb-2');
+var $rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mt2 = $elm$html$Html$Attributes$class('mt-2');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -6352,66 +6360,81 @@ var $rundis$elm_bootstrap$Bootstrap$Grid$row = F2(
 			$rundis$elm_bootstrap$Bootstrap$Grid$Internal$rowAttributes(options),
 			A2($elm$core$List$map, $rundis$elm_bootstrap$Bootstrap$Grid$renderCol, cols));
 	});
-var $elm$html$Html$span = _VirtualDom_node('span');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Main$MakeMove = function (a) {
 	return {$: 'MakeMove', a: a};
 };
-var $rundis$elm_bootstrap$Bootstrap$Grid$Internal$ColAttrs = function (a) {
-	return {$: 'ColAttrs', a: a};
-};
-var $rundis$elm_bootstrap$Bootstrap$Grid$Col$attrs = function (attrs_) {
-	return $rundis$elm_bootstrap$Bootstrap$Grid$Internal$ColAttrs(attrs_);
-};
-var $rundis$elm_bootstrap$Bootstrap$Grid$Internal$Col4 = {$: 'Col4'};
-var $rundis$elm_bootstrap$Bootstrap$Grid$Internal$ColWidth = function (a) {
-	return {$: 'ColWidth', a: a};
-};
-var $rundis$elm_bootstrap$Bootstrap$Grid$Internal$width = F2(
-	function (size, count) {
-		return $rundis$elm_bootstrap$Bootstrap$Grid$Internal$ColWidth(
-			A2($rundis$elm_bootstrap$Bootstrap$Grid$Internal$Width, size, count));
-	});
-var $rundis$elm_bootstrap$Bootstrap$Grid$Col$xs4 = A2($rundis$elm_bootstrap$Bootstrap$Grid$Internal$width, $rundis$elm_bootstrap$Bootstrap$General$Internal$XS, $rundis$elm_bootstrap$Bootstrap$Grid$Internal$Col4);
 var $author$project$Main$viewCell = F2(
 	function (i, val) {
 		return (val === 1) ? A2(
-			$rundis$elm_bootstrap$Bootstrap$Grid$col,
-			_List_fromArray(
-				[$rundis$elm_bootstrap$Bootstrap$Grid$Col$xs4]),
+			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$text('1')
-				])) : ((val === 2) ? A2(
-			$rundis$elm_bootstrap$Bootstrap$Grid$col,
-			_List_fromArray(
-				[$rundis$elm_bootstrap$Bootstrap$Grid$Col$xs4]),
-			_List_fromArray(
-				[
-					$elm$html$Html$text('2')
-				])) : A2(
-			$rundis$elm_bootstrap$Bootstrap$Grid$col,
-			_List_fromArray(
-				[
-					$rundis$elm_bootstrap$Bootstrap$Grid$Col$xs4,
-					$rundis$elm_bootstrap$Bootstrap$Grid$Col$attrs(
-					_List_fromArray(
-						[
-							$elm$html$Html$Events$onClick(
-							$author$project$Main$MakeMove(i))
-						]))
+					A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
+					A2($elm$html$Html$Attributes$style, 'border', '1px solid black'),
+					A2($elm$html$Html$Attributes$style, 'margin-right', '5px'),
+					A2($elm$html$Html$Attributes$style, 'width', '70px'),
+					A2($elm$html$Html$Attributes$style, 'height', '70px'),
+					A2($elm$html$Html$Attributes$style, 'background-color', 'red')
 				]),
+			_List_Nil) : ((val === 2) ? A2(
+			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$text('0')
-				])));
+					A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
+					A2($elm$html$Html$Attributes$style, 'border', '1px solid black'),
+					A2($elm$html$Html$Attributes$style, 'margin-right', '5px'),
+					A2($elm$html$Html$Attributes$style, 'width', '70px'),
+					A2($elm$html$Html$Attributes$style, 'height', '70px'),
+					A2($elm$html$Html$Attributes$style, 'background-color', 'blue')
+				]),
+			_List_Nil) : A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'display', 'inline-block'),
+					A2($elm$html$Html$Attributes$style, 'border', '1px solid black'),
+					A2($elm$html$Html$Attributes$style, 'margin-right', '5px'),
+					A2($elm$html$Html$Attributes$style, 'width', '70px'),
+					A2($elm$html$Html$Attributes$style, 'height', '70px'),
+					$elm$html$Html$Events$onClick(
+					$author$project$Main$MakeMove(i))
+				]),
+			_List_Nil));
 	});
 var $author$project$Main$viewBoard = function (plays) {
 	return A2(
-		$rundis$elm_bootstrap$Bootstrap$Grid$row,
-		_List_Nil,
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'width', '225px')
+			]),
 		A2($elm$core$List$indexedMap, $author$project$Main$viewCell, plays));
+};
+var $elm$html$Html$span = _VirtualDom_node('span');
+var $author$project$Main$viewTurn = function (turn) {
+	return (turn === 1) ? A2(
+		$elm$html$Html$span,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'color', 'red')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text('red\'s turn')
+			])) : A2(
+		$elm$html$Html$span,
+		_List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'color', 'blue')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text('blue\'s turn')
+			]));
 };
 var $author$project$Main$view = function (model) {
 	return A2(
@@ -6426,17 +6449,15 @@ var $author$project$Main$view = function (model) {
 					[
 						A2(
 						$rundis$elm_bootstrap$Bootstrap$Grid$col,
-						_List_Nil,
 						_List_fromArray(
 							[
-								A2(
-								$elm$html$Html$span,
-								_List_Nil,
+								$rundis$elm_bootstrap$Bootstrap$Grid$Col$attrs(
 								_List_fromArray(
-									[
-										$elm$html$Html$text(
-										'Turn ' + $elm$core$String$fromInt(model.state.turn))
-									]))
+									[$rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mt2, $rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mb2]))
+							]),
+						_List_fromArray(
+							[
+								$author$project$Main$viewTurn(model.state.turn)
 							]))
 					])),
 				$author$project$Main$viewBoard(model.state.plays),
