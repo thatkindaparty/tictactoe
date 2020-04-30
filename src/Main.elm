@@ -1,7 +1,7 @@
 port module Main exposing (..)
 
 import Browser
-import Html exposing (Html, text, div)
+import Html exposing (Html, text, div, span)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick)
 
@@ -126,7 +126,9 @@ view : Model -> Html Msg
 view model =
     Grid.container []
         [ Grid.row []
-            [ Grid.col [] [ text "hello" ]
+            [ Grid.col []
+                [ span [] [ text ("Turn " ++ (String.fromInt model.state.turn)) ]
+                ]
             ]
         , viewBoard model.state.plays
         , Button.button
