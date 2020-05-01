@@ -5369,7 +5369,10 @@ var $author$project$Main$update = F2(
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{state: state}),
+							{
+								state: state,
+								winner: $author$project$Main$getWinner(state)
+							}),
 						$elm$core$Platform$Cmd$none);
 				} else {
 					var e = _v1.a;

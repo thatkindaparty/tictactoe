@@ -105,7 +105,11 @@ update msg model =
         PullState value ->
             case D.decodeValue stateFromJson value of
                 Ok state ->
-                    ( { model | state = state }
+                    (
+                        { model
+                            | state = state
+                            , winner = getWinner state
+                        }
                     , Cmd.none
                     )
 
