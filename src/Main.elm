@@ -139,6 +139,8 @@ getWinner : State -> Int
 getWinner state =
     if hasWinner state.plays then
         nextTurn state.turn
+    else if List.all ((/=) 0) state.plays then
+        2 -- draw
     else
         0
 
@@ -213,6 +215,8 @@ viewWinner winner =
         div [] [ text "red won!" ]
     else if winner == -1 then
         div [] [ text "blue won!" ]
+    else if winner == 2 then
+        div [] [ text "It's a draw!" ]
     else
         div [] []
 
