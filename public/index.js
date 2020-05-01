@@ -13,7 +13,14 @@ var app = Elm.Main.init({
 
 db.collection('games').doc(gameId)
 	.onSnapshot(snap => {
-		app.ports.pullState.send(snap.data);
+		if (snap.exists) {
+			app.ports.pullState.send(snap.data());
+		} else {
+			app.ports.pullState.send({
+				plays: Array(9).fill(0),
+				turn: 1
+			});
+		}
 	});
 
 app.ports.pushState.subscribe(data => {

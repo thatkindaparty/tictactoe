@@ -9,6 +9,7 @@ import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 
+import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Utilities.Spacing as Spacing
 
@@ -48,6 +49,7 @@ stateToJson state =
 type alias Model =
     { state : State
     , errMsg : String
+    , winner : Int
     }
 
 type alias State =
@@ -61,7 +63,7 @@ init _ =
 
 initModel : Model
 initModel =
-    Model initState ""
+    Model initState "" 0
 
 initState : State
 initState =
@@ -81,9 +83,17 @@ update msg model =
     case msg of
         MakeMove i ->
             let
-                newState = updateState i model.state
+                newState =
+                    if model.winner == 0 then
+                        updateState i model.state
+                    else
+                        model.state
             in
-                ( { model | state = newState }
+                (
+                    { model
+                        | state = newState
+                        , winner = getWinner newState
+                    }
                 , pushState (stateToJson newState)
                 )
 
@@ -109,16 +119,51 @@ updateState : Int -> State -> State
 updateState i state =
     { state
         | plays = List.indexedMap (replaceByIndex i state.turn) state.plays
-        , turn = updateTurn state.turn
+        , turn = nextTurn state.turn
     }
 
-updateTurn : Int -> Int
-updateTurn turn =
-    if turn == 1 then 2 else 1
+nextTurn : Int -> Int
+nextTurn turn =
+    if turn == 1 then -1 else 1
 
 replaceByIndex : Int -> Int -> Int -> Int -> Int
 replaceByIndex target newVal i oldVal =
     if target == i then newVal else oldVal
+
+
+getWinner : State -> Int
+getWinner state =
+    if hasWinner state.plays then
+        nextTurn state.turn
+    else
+        0
+
+hasWinner : List Int -> Bool
+hasWinner plays =
+    let
+        lines =
+            [ [0, 1, 2] , [3, 4, 5] , [6, 7, 8]
+            , [0, 3, 6] , [1, 4, 7] , [2, 5, 8]
+            , [0, 4, 8] , [2, 4, 6]
+            ]
+    in
+        List.map (checkLine plays) lines
+            |> List.any identity
+
+checkLine : List Int -> List Int -> Bool
+checkLine plays line =
+    List.indexedMap (keepIndices line) plays
+        |> List.sum
+        |> abs
+        |> (==) 3
+
+keepIndices : List Int -> Int -> Int -> Int
+keepIndices idxs i val =
+    if List.member i idxs then
+        val
+    else
+        0
+
 
 
 -- VIEW
@@ -128,14 +173,23 @@ view model =
     Grid.container []
         [ Grid.row []
             [ Grid.col
-                [ Col.attrs [ Spacing.mt2, Spacing.mb2 ] ]
+                [ Col.attrs [ Spacing.my2 ] ]
                 [ viewTurn model.state.turn ]
             ]
         , viewBoard model.state.plays
+        , viewWinner model.winner
+        , viewErrMsg model.errMsg
         , Button.button
             [ Button.attrs [ onClick ResetGame ] ]
             [ text "Reset game" ]
         ]
+
+viewErrMsg : String -> Html Msg
+viewErrMsg errMsg =
+    if String.isEmpty errMsg then
+        div [] []
+    else
+        Alert.simpleDanger [ Spacing.my2 ] [ text errMsg ]
 
 viewTurn : Int -> Html Msg
 viewTurn turn =
@@ -149,6 +203,15 @@ viewBoard plays =
     div [ style "width" "225px" ]
         (List.indexedMap viewCell plays)
 
+viewWinner : Int -> Html Msg
+viewWinner winner =
+    if winner == 1 then
+        div [] [ text "red won!" ]
+    else if winner == -1 then
+        div [] [ text "blue won!" ]
+    else
+        div [] []
+
 viewCell : Int -> Int -> Html Msg
 viewCell i val =
     if val == 1 then
@@ -159,7 +222,7 @@ viewCell i val =
             , style "height" "70px"
             , style "background-color" "red"
             ] []
-    else if val == 2 then
+    else if val == -1 then
         div [ style "display" "inline-block"
             , style "border" "1px solid black"
             , style "margin-right" "5px"

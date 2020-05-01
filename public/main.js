@@ -5144,9 +5144,9 @@ var $elm$core$Task$perform = F2(
 				A2($elm$core$Task$map, toMessage, task)));
 	});
 var $elm$browser$Browser$element = _Browser_element;
-var $author$project$Main$Model = F2(
-	function (state, errMsg) {
-		return {errMsg: errMsg, state: state};
+var $author$project$Main$Model = F3(
+	function (state, errMsg, winner) {
+		return {errMsg: errMsg, state: state, winner: winner};
 	});
 var $author$project$Main$State = F2(
 	function (plays, turn) {
@@ -5177,7 +5177,7 @@ var $author$project$Main$initState = A2(
 	$author$project$Main$State,
 	A2($elm$core$List$repeat, 9, 0),
 	1);
-var $author$project$Main$initModel = A2($author$project$Main$Model, $author$project$Main$initState, '');
+var $author$project$Main$initModel = A3($author$project$Main$Model, $author$project$Main$initState, '', 0);
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Main$init = function (_v0) {
@@ -5192,6 +5192,92 @@ var $author$project$Main$subscriptions = function (model) {
 	return $author$project$Main$pullState($author$project$Main$PullState);
 };
 var $elm$json$Json$Decode$decodeValue = _Json_run;
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $author$project$Main$keepIndices = F3(
+	function (idxs, i, val) {
+		return A2($elm$core$List$member, i, idxs) ? val : 0;
+	});
+var $elm$core$List$sum = function (numbers) {
+	return A3($elm$core$List$foldl, $elm$core$Basics$add, 0, numbers);
+};
+var $author$project$Main$checkLine = F2(
+	function (plays, line) {
+		return 3 === $elm$core$Basics$abs(
+			$elm$core$List$sum(
+				A2(
+					$elm$core$List$indexedMap,
+					$author$project$Main$keepIndices(line),
+					plays)));
+	});
+var $author$project$Main$hasWinner = function (plays) {
+	var lines = _List_fromArray(
+		[
+			_List_fromArray(
+			[0, 1, 2]),
+			_List_fromArray(
+			[3, 4, 5]),
+			_List_fromArray(
+			[6, 7, 8]),
+			_List_fromArray(
+			[0, 3, 6]),
+			_List_fromArray(
+			[1, 4, 7]),
+			_List_fromArray(
+			[2, 5, 8]),
+			_List_fromArray(
+			[0, 4, 8]),
+			_List_fromArray(
+			[2, 4, 6])
+		]);
+	return A2(
+		$elm$core$List$any,
+		$elm$core$Basics$identity,
+		A2(
+			$elm$core$List$map,
+			$author$project$Main$checkLine(plays),
+			lines));
+};
+var $author$project$Main$nextTurn = function (turn) {
+	return (turn === 1) ? (-1) : 1;
+};
+var $author$project$Main$getWinner = function (state) {
+	return $author$project$Main$hasWinner(state.plays) ? $author$project$Main$nextTurn(state.turn) : 0;
+};
 var $author$project$Main$pushState = _Platform_outgoingPort('pushState', $elm$core$Basics$identity);
 var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
@@ -5243,9 +5329,6 @@ var $author$project$Main$replaceByIndex = F4(
 	function (target, newVal, i, oldVal) {
 		return _Utils_eq(target, i) ? newVal : oldVal;
 	});
-var $author$project$Main$updateTurn = function (turn) {
-	return (turn === 1) ? 2 : 1;
-};
 var $author$project$Main$updateState = F2(
 	function (i, state) {
 		return _Utils_update(
@@ -5255,7 +5338,7 @@ var $author$project$Main$updateState = F2(
 					$elm$core$List$indexedMap,
 					A2($author$project$Main$replaceByIndex, i, state.turn),
 					state.plays),
-				turn: $author$project$Main$updateTurn(state.turn)
+				turn: $author$project$Main$nextTurn(state.turn)
 			});
 	});
 var $author$project$Main$update = F2(
@@ -5263,11 +5346,14 @@ var $author$project$Main$update = F2(
 		switch (msg.$) {
 			case 'MakeMove':
 				var i = msg.a;
-				var newState = A2($author$project$Main$updateState, i, model.state);
+				var newState = (!model.winner) ? A2($author$project$Main$updateState, i, model.state) : model.state;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{state: newState}),
+						{
+							state: newState,
+							winner: $author$project$Main$getWinner(newState)
+						}),
 					$author$project$Main$pushState(
 						$author$project$Main$stateToJson(newState)));
 			case 'ResetGame':
@@ -5513,8 +5599,7 @@ var $rundis$elm_bootstrap$Bootstrap$Grid$container = F2(
 				attributes),
 			children);
 	});
-var $rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mb2 = $elm$html$Html$Attributes$class('mb-2');
-var $rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mt2 = $elm$html$Html$Attributes$class('mt-2');
+var $rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$my2 = $elm$html$Html$Attributes$class('my-2');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -6380,7 +6465,7 @@ var $author$project$Main$viewCell = F2(
 					A2($elm$html$Html$Attributes$style, 'height', '70px'),
 					A2($elm$html$Html$Attributes$style, 'background-color', 'red')
 				]),
-			_List_Nil) : ((val === 2) ? A2(
+			_List_Nil) : (_Utils_eq(val, -1) ? A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
@@ -6414,7 +6499,233 @@ var $author$project$Main$viewBoard = function (plays) {
 			]),
 		A2($elm$core$List$indexedMap, $author$project$Main$viewCell, plays));
 };
+var $rundis$elm_bootstrap$Bootstrap$Internal$Role$Danger = {$: 'Danger'};
+var $rundis$elm_bootstrap$Bootstrap$Alert$Shown = {$: 'Shown'};
+var $rundis$elm_bootstrap$Bootstrap$Alert$Config = function (a) {
+	return {$: 'Config', a: a};
+};
+var $rundis$elm_bootstrap$Bootstrap$Alert$attrs = F2(
+	function (attributes, _v0) {
+		var configRec = _v0.a;
+		return $rundis$elm_bootstrap$Bootstrap$Alert$Config(
+			_Utils_update(
+				configRec,
+				{attributes: attributes}));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Alert$children = F2(
+	function (children_, _v0) {
+		var configRec = _v0.a;
+		return $rundis$elm_bootstrap$Bootstrap$Alert$Config(
+			_Utils_update(
+				configRec,
+				{children: children_}));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Internal$Role$Secondary = {$: 'Secondary'};
+var $rundis$elm_bootstrap$Bootstrap$Alert$config = $rundis$elm_bootstrap$Bootstrap$Alert$Config(
+	{attributes: _List_Nil, children: _List_Nil, dismissable: $elm$core$Maybe$Nothing, role: $rundis$elm_bootstrap$Bootstrap$Internal$Role$Secondary, visibility: $rundis$elm_bootstrap$Bootstrap$Alert$Shown, withAnimation: false});
+var $rundis$elm_bootstrap$Bootstrap$Alert$role = F2(
+	function (role_, _v0) {
+		var configRec = _v0.a;
+		return $rundis$elm_bootstrap$Bootstrap$Alert$Config(
+			_Utils_update(
+				configRec,
+				{role: role_}));
+	});
+var $elm$virtual_dom$VirtualDom$attribute = F2(
+	function (key, value) {
+		return A2(
+			_VirtualDom_attribute,
+			_VirtualDom_noOnOrFormAction(key),
+			_VirtualDom_noJavaScriptOrHtmlUri(value));
+	});
+var $elm$html$Html$Attributes$attribute = $elm$virtual_dom$VirtualDom$attribute;
+var $rundis$elm_bootstrap$Bootstrap$Alert$Closed = {$: 'Closed'};
+var $rundis$elm_bootstrap$Bootstrap$Alert$StartClose = {$: 'StartClose'};
+var $rundis$elm_bootstrap$Bootstrap$Alert$clickHandler = F2(
+	function (visibility, configRec) {
+		var handleClick = F2(
+			function (viz, toMsg) {
+				return $elm$html$Html$Events$onClick(
+					toMsg(viz));
+			});
+		var _v0 = configRec.dismissable;
+		if (_v0.$ === 'Just') {
+			var dismissMsg = _v0.a;
+			return _List_fromArray(
+				[
+					configRec.withAnimation ? A2(handleClick, $rundis$elm_bootstrap$Bootstrap$Alert$StartClose, dismissMsg) : A2(handleClick, $rundis$elm_bootstrap$Bootstrap$Alert$Closed, dismissMsg)
+				]);
+		} else {
+			return _List_Nil;
+		}
+	});
+var $rundis$elm_bootstrap$Bootstrap$Alert$injectButton = F2(
+	function (btn, children_) {
+		if (children_.b) {
+			var head = children_.a;
+			var tail = children_.b;
+			return A2(
+				$elm$core$List$cons,
+				head,
+				A2($elm$core$List$cons, btn, tail));
+		} else {
+			return _List_fromArray(
+				[btn]);
+		}
+	});
+var $rundis$elm_bootstrap$Bootstrap$Alert$isDismissable = function (configRec) {
+	var _v0 = configRec.dismissable;
+	if (_v0.$ === 'Just') {
+		return true;
+	} else {
+		return false;
+	}
+};
 var $elm$html$Html$span = _VirtualDom_node('span');
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
+var $rundis$elm_bootstrap$Bootstrap$Alert$maybeAddDismissButton = F3(
+	function (visibilty, configRec, children_) {
+		return $rundis$elm_bootstrap$Bootstrap$Alert$isDismissable(configRec) ? A2(
+			$rundis$elm_bootstrap$Bootstrap$Alert$injectButton,
+			A2(
+				$elm$html$Html$button,
+				_Utils_ap(
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$type_('button'),
+							$elm$html$Html$Attributes$class('close'),
+							A2($elm$html$Html$Attributes$attribute, 'aria-label', 'close')
+						]),
+					A2($rundis$elm_bootstrap$Bootstrap$Alert$clickHandler, visibilty, configRec)),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$span,
+						_List_fromArray(
+							[
+								A2($elm$html$Html$Attributes$attribute, 'aria-hidden', 'true')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('×')
+							]))
+					])),
+			children_) : children_;
+	});
+var $elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3($elm$core$List$foldr, $elm$core$List$cons, ys, xs);
+		}
+	});
+var $elm$core$List$concat = function (lists) {
+	return A3($elm$core$List$foldr, $elm$core$List$append, _List_Nil, lists);
+};
+var $rundis$elm_bootstrap$Bootstrap$Internal$Role$toClass = F2(
+	function (prefix, role) {
+		return $elm$html$Html$Attributes$class(
+			prefix + ('-' + function () {
+				switch (role.$) {
+					case 'Primary':
+						return 'primary';
+					case 'Secondary':
+						return 'secondary';
+					case 'Success':
+						return 'success';
+					case 'Info':
+						return 'info';
+					case 'Warning':
+						return 'warning';
+					case 'Danger':
+						return 'danger';
+					case 'Light':
+						return 'light';
+					default:
+						return 'dark';
+				}
+			}()));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Alert$viewAttributes = F2(
+	function (visibility, configRec) {
+		var visibiltyAttributes = _Utils_eq(visibility, $rundis$elm_bootstrap$Bootstrap$Alert$Closed) ? _List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'display', 'none')
+			]) : _List_Nil;
+		var animationAttributes = function () {
+			if (configRec.withAnimation) {
+				var _v0 = configRec.dismissable;
+				if (_v0.$ === 'Just') {
+					var dismissMsg = _v0.a;
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$Events$on,
+							'transitionend',
+							$elm$json$Json$Decode$succeed(
+								dismissMsg($rundis$elm_bootstrap$Bootstrap$Alert$Closed)))
+						]);
+				} else {
+					return _List_Nil;
+				}
+			} else {
+				return _List_Nil;
+			}
+		}();
+		var alertAttributes = _List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$attribute, 'role', 'alert'),
+				$elm$html$Html$Attributes$classList(
+				_List_fromArray(
+					[
+						_Utils_Tuple2('alert', true),
+						_Utils_Tuple2(
+						'alert-dismissible',
+						$rundis$elm_bootstrap$Bootstrap$Alert$isDismissable(configRec)),
+						_Utils_Tuple2('fade', configRec.withAnimation),
+						_Utils_Tuple2(
+						'show',
+						_Utils_eq(visibility, $rundis$elm_bootstrap$Bootstrap$Alert$Shown))
+					])),
+				A2($rundis$elm_bootstrap$Bootstrap$Internal$Role$toClass, 'alert', configRec.role)
+			]);
+		return $elm$core$List$concat(
+			_List_fromArray(
+				[configRec.attributes, alertAttributes, visibiltyAttributes, animationAttributes]));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Alert$view = F2(
+	function (visibility, _v0) {
+		var configRec = _v0.a;
+		return A2(
+			$elm$html$Html$div,
+			A2($rundis$elm_bootstrap$Bootstrap$Alert$viewAttributes, visibility, configRec),
+			A3($rundis$elm_bootstrap$Bootstrap$Alert$maybeAddDismissButton, visibility, configRec, configRec.children));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Alert$simple = F3(
+	function (role_, attributes, children_) {
+		return A2(
+			$rundis$elm_bootstrap$Bootstrap$Alert$view,
+			$rundis$elm_bootstrap$Bootstrap$Alert$Shown,
+			A2(
+				$rundis$elm_bootstrap$Bootstrap$Alert$children,
+				children_,
+				A2(
+					$rundis$elm_bootstrap$Bootstrap$Alert$attrs,
+					attributes,
+					A2($rundis$elm_bootstrap$Bootstrap$Alert$role, role_, $rundis$elm_bootstrap$Bootstrap$Alert$config))));
+	});
+var $rundis$elm_bootstrap$Bootstrap$Alert$simpleDanger = $rundis$elm_bootstrap$Bootstrap$Alert$simple($rundis$elm_bootstrap$Bootstrap$Internal$Role$Danger);
+var $author$project$Main$viewErrMsg = function (errMsg) {
+	return $elm$core$String$isEmpty(errMsg) ? A2($elm$html$Html$div, _List_Nil, _List_Nil) : A2(
+		$rundis$elm_bootstrap$Bootstrap$Alert$simpleDanger,
+		_List_fromArray(
+			[$rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$my2]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(errMsg)
+			]));
+};
 var $author$project$Main$viewTurn = function (turn) {
 	return (turn === 1) ? A2(
 		$elm$html$Html$span,
@@ -6436,6 +6747,21 @@ var $author$project$Main$viewTurn = function (turn) {
 				$elm$html$Html$text('blue\'s turn')
 			]));
 };
+var $author$project$Main$viewWinner = function (winner) {
+	return (winner === 1) ? A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text('red won!')
+			])) : (_Utils_eq(winner, -1) ? A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$text('blue won!')
+			])) : A2($elm$html$Html$div, _List_Nil, _List_Nil));
+};
 var $author$project$Main$view = function (model) {
 	return A2(
 		$rundis$elm_bootstrap$Bootstrap$Grid$container,
@@ -6453,7 +6779,7 @@ var $author$project$Main$view = function (model) {
 							[
 								$rundis$elm_bootstrap$Bootstrap$Grid$Col$attrs(
 								_List_fromArray(
-									[$rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mt2, $rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$mb2]))
+									[$rundis$elm_bootstrap$Bootstrap$Utilities$Spacing$my2]))
 							]),
 						_List_fromArray(
 							[
@@ -6461,6 +6787,8 @@ var $author$project$Main$view = function (model) {
 							]))
 					])),
 				$author$project$Main$viewBoard(model.state.plays),
+				$author$project$Main$viewWinner(model.winner),
+				$author$project$Main$viewErrMsg(model.errMsg),
 				A2(
 				$rundis$elm_bootstrap$Bootstrap$Button$button,
 				_List_fromArray(
